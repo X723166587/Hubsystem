@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryD1 } from '@/googleSheet';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge'; // 必须启用 Edge 运行时以访问 D1 绑定
 
 export async function GET(req: NextRequest) {
   try {
