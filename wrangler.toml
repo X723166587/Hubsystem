@@ -1,0 +1,12 @@
+name = "orderbot-pro"
+compatibility_date = "2024-05-02"
+pages_build_output_dir = ".vercel/output/static"
+
+[vars]
+CF_ACCOUNT_ID = "363a6bff837a4027f707a8151131f86d"
+CF_DATABASE_ID = "07c5b556-ca2c-4b13-bbb4-2ed57d50e22a"
+
+[[d1_databases]]
+binding = "DB"
+database_id = "07c5b556-ca2c-4b13-bbb4-2ed57d50e22a"
+database_name = "camden_rsl_db"
