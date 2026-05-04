@@ -3,9 +3,10 @@
  * Refactored from Google Sheets for production scalability.
  */
 
-const CF_ACCOUNT_ID = "363a6bff837a4027f707a8151131f86d";
-const CF_DATABASE_ID = "07c5b556-ca2c-4b13-bbb4-2ed57d50e22a";
-const CF_API_TOKEN = "cfut_EKe6pGT3pVcp8vvsU6XV4akntr2ZDqZQ0EBb8iqt633ced95";
+// 从环境变量中读取配置
+const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+const CF_DATABASE_ID = process.env.CF_DATABASE_ID;
+const CF_API_TOKEN = process.env.CF_API_TOKEN;
 
 export const queryD1 = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => {
   const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${CF_DATABASE_ID}/query`;
