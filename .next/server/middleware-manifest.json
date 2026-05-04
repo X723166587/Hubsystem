@@ -1,6 +1,36 @@
 {
   "version": 3,
   "middleware": {},
-  "functions": {},
+  "functions": {
+    "/api/orders/route": {
+      "files": [
+        "server/server-reference-manifest.js",
+        "server/app/api/orders/route_client-reference-manifest.js",
+        "server/middleware-build-manifest.js",
+        "server/middleware-react-loadable-manifest.js",
+        "server/next-font-manifest.js",
+        "server/interception-route-rewrite-manifest.js",
+        "server/edge-runtime-webpack.js",
+        "server/app/api/orders/route.js"
+      ],
+      "name": "app/api/orders/route",
+      "page": "/api/orders/route",
+      "matchers": [
+        {
+          "regexp": "^/api/orders$",
+          "originalSource": "/api/orders"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "development",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "yN4Tpx4I0c8qn1OkH4rYk37s1pagaIJOMTSwxfGCqWI=",
+        "__NEXT_PREVIEW_MODE_ID": "4df834613d70a7f8206c1062d75b7d6d",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "d94764d68da5d4e33c38e2f75371342a393ded4128578b2ed8a3a86421def445",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "9edba31614dccc4c59404255aeb31eab71f17b81e2102a5670352ab75dd84e16"
+      }
+    }
+  },
   "sortedMiddleware": []
 }
