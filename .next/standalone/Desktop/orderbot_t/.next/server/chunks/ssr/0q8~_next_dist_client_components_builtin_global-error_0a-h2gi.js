@@ -1,3 +1,0 @@
-module.exports=[95929,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(30412);a.n(d("[project]/Desktop/orderbot_t/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},81049,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(30412);a.n(d("[project]/Desktop/orderbot_t/node_modules/next/dist/client/components/builtin/global-error.js"))},66392,a=>{"use strict";a.i(95929);var b=a.i(81049);a.n(b)},24975,a=>{a.n(a.i(66392))}];
-
-//# sourceMappingURL=0q8~_next_dist_client_components_builtin_global-error_0a-h2gi.js.map

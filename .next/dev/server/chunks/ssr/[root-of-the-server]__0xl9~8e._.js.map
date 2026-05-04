@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///Users/gisakaitatsu/Desktop/orderbot_t/app/page.tsx"],"sourcesContent":["export default function Home() {\n  return (\n    <main style={{ padding: '2rem' }}>\n      <h1>Order Bot T is running.</h1>\n      <p>Check API at <a href=\"/api/orders\">/api/orders</a></p>\n    </main>\n  )\n}"],"names":["Home","style","padding","href"],"mappings":";;;;;;AAAe,SAASA;IACtB,qBACE,uQAAC;QAAKC,OAAO;YAAEC,SAAS;QAAO;;0BAC7B,uQAAC;0BAAG;;;;;;0BACJ,uQAAC;;oBAAE;kCAAa,uQAAC;wBAAEC,MAAK;kCAAc;;;;;;;;;;;;;;;;;;AAG5C"}}]
-}
