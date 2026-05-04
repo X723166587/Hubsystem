@@ -8,22 +8,24 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 
 export const queryD1 = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => {
     // 1. 尝试使用 D1 Binding (生产/预览环境的最佳实践)
+  let env: any = {};
   try {
     const context = getRequestContext();
-    const db = context?.env?.DB;
+    env = context.env || {};
+    const db = env.DB;
 
     if (db) {
       const { results } = await db.prepare(sql).bind(...params).all();
       return results as T[];
     }
   } catch (e) {
-    // 本地开发环境 getRequestContext 会报错，捕获并进入下方的 API 回退逻辑
+    // 本地开发环境或未开启 nodejs_compat 时，回退到 process.env
   }
 
-  // 2. API 回退逻辑 (主要用于本地 npm run dev)
-  const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
-  const CF_DATABASE_ID = process.env.CF_DATABASE_ID;
-  const CF_API_TOKEN = process.env.CF_API_TOKEN;
+  // 2. API 回退逻辑：优先从 context.env 读取变量，如果没有则回退到 process.env
+  const CF_ACCOUNT_ID = env.CF_ACCOUNT_ID || (typeof process !== 'undefined' ? process.env.CF_ACCOUNT_ID : undefined);
+  const CF_DATABASE_ID = env.CF_DATABASE_ID || (typeof process !== 'undefined' ? process.env.CF_DATABASE_ID : undefined);
+  const CF_API_TOKEN = env.CF_API_TOKEN || (typeof process !== 'undefined' ? process.env.CF_API_TOKEN : undefined);
 
   const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${CF_DATABASE_ID}/query`;
   
