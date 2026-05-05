@@ -72,7 +72,10 @@ export const sendSMS = async (to: string, message: string) => {
   // Edge Runtime 使用 btoa 进行 Basic Auth 编码
   const auth = btoa(`${API_KEY}:${API_SECRET}`);
 
-  const response = await fetch('https://api.transmitsms.com/send-sms.json', {
+  const url = 'https://api.transmitsms.com/send-sms.json';
+  console.log(`[SMS] Attempting to send to: ${to}`);
+
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `Basic ${auth}`,
@@ -81,5 +84,18 @@ export const sendSMS = async (to: string, message: string) => {
     body: new URLSearchParams({ to, message }),
   });
 
-  return response.json();
+  const data: any = await response.json();
+
+  if (!response.ok) {
+    // 这里的错误数据非常关键，会包含服务商返回的具体原因（如余额不足、凭证无效等）
+    console.error('[SMS API Error]', {
+      status: response.status,
+      error: data.error?.description || data.message || 'Unknown error',
+      fullResponse: data
+    });
+    throw new Error(`SMS Provider Error: ${data.error?.description || 'Delivery failed'}`);
+  }
+
+  console.log('[SMS] Send Success:', data.message);
+  return data;
 };

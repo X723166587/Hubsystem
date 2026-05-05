@@ -108,9 +108,32 @@ export async function POST(req: Request) {
 
       if (order) {
         const msg = `Hi ${order.name}, your order at Camden RSL is confirmed! Pickup time: ${pickupTime}. See you then!`;
-        // 注意：确保手机号包含国际代码，例如澳大利亚 614...
-        const formattedPhone = order.phone.startsWith('0') ? `61${order.phone.slice(1)}` : order.phone;
-        await sendSMS(formattedPhone, msg).catch(err => console.error('SMS Send Error:', err));
+        
+        // 增强手机号格式化逻辑，确保为 E.164 格式 (+国家代码+号码)
+        let rawPhone = String(order.phone).replace(/\D/g, ''); // 移除所有非数字字符
+        let formattedPhone = '';
+
+        if (rawPhone.startsWith('+')) {
+          formattedPhone = rawPhone; // 如果已经有 +，则认为已是 E.164 格式
+        } else if (rawPhone.startsWith('0')) {
+          // 澳大利亚号码通常以 0 开头，替换 0 为 +61
+          formattedPhone = `+61${rawPhone.slice(1)}`;
+        } else if (rawPhone.length === 9 && rawPhone.startsWith('4')) {
+          // 常见澳大利亚手机号格式，缺少开头的 0，直接添加 +61
+          formattedPhone = `+61${rawPhone}`;
+        } else {
+          // 默认添加 +61，假设所有号码都在澳大利亚，如果不是，需要更复杂的逻辑
+          formattedPhone = `+61${rawPhone}`;
+        }
+
+        console.log(`[SMS] Original phone: ${order.phone}, Formatted phone: ${formattedPhone}`);
+        
+        try {
+          await sendSMS(formattedPhone, msg);
+        } catch (err: any) {
+          // 如果短信失败，我们在这里记录，但不要让整个接口崩掉，否则前端会以为订单更新也失败了
+          console.error('[Route POST] SMS trigger failed for order:', id, 'Reason:', err.message);
+        }
       }
     }
 
