@@ -102,10 +102,16 @@ export async function POST(req: Request) {
 
     // 如果状态切换为 confirmed，触发短信通知
     if (status === 'confirmed') {
-      const msg = `Hi ${order.name}, your order at Camden RSL is confirmed! Pickup time: ${finalPickupTime}. See you then!`;
-      // 注意：确保手机号包含国际代码，例如澳大利亚 614...
-      const formattedPhone = order.phone.startsWith('0') ? `61${order.phone.slice(1)}` : order.phone;
-      await sendSMS(formattedPhone, msg).catch(err => console.error('SMS Send Error:', err));
+      // 先查询订单详情以获取姓名和电话
+      const results = await queryD1('SELECT name, phone FROM orders WHERE id = ?', [id]);
+      const order = results[0];
+
+      if (order) {
+        const msg = `Hi ${order.name}, your order at Camden RSL is confirmed! Pickup time: ${pickupTime}. See you then!`;
+        // 注意：确保手机号包含国际代码，例如澳大利亚 614...
+        const formattedPhone = order.phone.startsWith('0') ? `61${order.phone.slice(1)}` : order.phone;
+        await sendSMS(formattedPhone, msg).catch(err => console.error('SMS Send Error:', err));
+      }
     }
 
     return NextResponse.json({ success: true });
