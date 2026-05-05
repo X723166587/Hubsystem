@@ -51,3 +51,35 @@ export const queryD1 = async <T = any>(sql: string, params: any[] = []): Promise
   // D1 query API 返回的是结果数组中的第一个结果集的 results
   return data.result[0].results as T[];
 };
+
+/**
+ * 发送确认短信 (Kudosity / TransmitSMS)
+ */
+export const sendSMS = async (to: string, message: string) => {
+  let env: any = {};
+  try {
+    const context = getRequestContext();
+    env = context.env || {};
+  } catch (e) {}
+
+  const API_KEY = env.SMS_API_KEY || (typeof process !== 'undefined' ? process.env.SMS_API_KEY : undefined);
+  const API_SECRET = env.SMS_API_SECRET || (typeof process !== 'undefined' ? process.env.SMS_API_SECRET : undefined);
+  
+  if (!API_KEY || !API_SECRET) {
+    throw new Error('SMS API configuration missing: SMS_API_KEY or SMS_API_SECRET');
+  }
+  
+  // Edge Runtime 使用 btoa 进行 Basic Auth 编码
+  const auth = btoa(`${API_KEY}:${API_SECRET}`);
+
+  const response = await fetch('https://api.transmitsms.com/send-sms.json', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({ to, message }),
+  });
+
+  return response.json();
+};

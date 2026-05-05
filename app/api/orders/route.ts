@@ -2,8 +2,9 @@
  * Orders API Route
  * Handles order listing and updates.
  */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { queryD1 } from '@/googleSheet';
+import { queryD1, sendSMS } from '@/googleSheet';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -98,6 +99,14 @@ export async function POST(req: Request) {
       'UPDATE orders SET status = ?, pickup_time = ? WHERE id = ?',
       [status, pickupTime, id]
     );
+
+    // 如果状态切换为 confirmed，触发短信通知
+    if (status === 'confirmed') {
+      const msg = `Hi ${order.name}, your order at Camden RSL is confirmed! Pickup time: ${finalPickupTime}. See you then!`;
+      // 注意：确保手机号包含国际代码，例如澳大利亚 614...
+      const formattedPhone = order.phone.startsWith('0') ? `61${order.phone.slice(1)}` : order.phone;
+      await sendSMS(formattedPhone, msg).catch(err => console.error('SMS Send Error:', err));
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
