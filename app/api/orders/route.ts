@@ -110,21 +110,14 @@ export async function POST(req: Request) {
         const msg = `Hi ${order.name}, your order at Camden RSL is confirmed! Pickup time: ${pickupTime}. See you then!`;
         
         // 增强手机号格式化逻辑，确保为 E.164 格式 (+国家代码+号码)
-        let rawPhone = String(order.phone).replace(/\D/g, ''); // 移除所有非数字字符
-        let formattedPhone = '';
+        let digits = String(order.phone).replace(/\D/g, ''); 
+        
+        // 如果是 04... 格式，转为 614...
+        if (digits.startsWith('0')) digits = '61' + digits.slice(1);
+        // 如果不是以 61 开头，补上 61 (针对直接输入 4xx... 的情况)
+        if (!digits.startsWith('61')) digits = '61' + digits;
 
-        if (rawPhone.startsWith('+')) {
-          formattedPhone = rawPhone; // 如果已经有 +，则认为已是 E.164 格式
-        } else if (rawPhone.startsWith('0')) {
-          // 澳大利亚号码通常以 0 开头，替换 0 为 +61
-          formattedPhone = `+61${rawPhone.slice(1)}`;
-        } else if (rawPhone.length === 9 && rawPhone.startsWith('4')) {
-          // 常见澳大利亚手机号格式，缺少开头的 0，直接添加 +61
-          formattedPhone = `+61${rawPhone}`;
-        } else {
-          // 默认添加 +61，假设所有号码都在澳大利亚，如果不是，需要更复杂的逻辑
-          formattedPhone = `+61${rawPhone}`;
-        }
+        const formattedPhone = '+' + digits;
 
         console.log(`[SMS] Original phone: ${order.phone}, Formatted phone: ${formattedPhone}`);
         
