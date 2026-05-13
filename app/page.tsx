@@ -164,7 +164,7 @@ export default function OrderManagementPage() {
     }
   };
 
-  const handleUpdateOrder = async (order: any, updates: { status?: string, pickupTime?: string }) => {
+  const handleUpdateOrder = async (order: any, updates: { status?: string, pickupTime?: string | null }) => {
     setIsUpdating(order.id);
     const payload = {
       id: order.id,
