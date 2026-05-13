@@ -9,6 +9,22 @@ import { queryD1, sendSMS } from '@/googleSheet';
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
+/**
+ * 统一处理手机号格式为 E.164 (+61...)
+ */
+function formatAUPhone(phone: string): string {
+  let digits = String(phone).replace(/\D/g, '');
+  // 处理 04... 格式
+  if (digits.startsWith('0')) {
+    digits = '61' + digits.slice(1);
+  }
+  // 如果不是以 61 开头且长度为 9 (澳洲手机去掉首位 0)，补上 61
+  if (!digits.startsWith('61')) {
+    digits = '61' + digits;
+  }
+  return '+' + digits;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -78,14 +94,23 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // 整合会员录入逻辑
-    if (body.phone && body.name && !body.id) {
+    // 1. 会员登录/注册逻辑 (改进)
+    if (body.type === 'login' || (body.phone && body.name && !body.id)) {
+      const { phone, name } = body;
+      if (!phone) return NextResponse.json({ error: 'Phone is required' }, { status: 400 });
+      
+      const formattedPhone = formatAUPhone(phone);
+      const finalName = name?.trim() || 'Customer';
+
       await queryD1(
         `INSERT INTO members (phone, name) VALUES (?, ?) 
          ON CONFLICT(phone) DO UPDATE SET name = excluded.name`,
-        [body.phone.trim(), body.name.trim()]
+        [formattedPhone, finalName]
       );
-      return NextResponse.json({ success: true });
+
+      // 返回最新会员信息，方便前端存储状态
+      const member = await queryD1('SELECT phone, name FROM members WHERE phone = ?', [formattedPhone]);
+      return NextResponse.json({ success: true, member: member[0] });
     }
 
     const { id, status, pickupTime } = body;
@@ -109,16 +134,7 @@ export async function POST(req: Request) {
       if (order) {
         const msg = `Hi ${order.name}, your order at Camden RSL is confirmed! Pickup time: ${pickupTime}. See you then!`;
         
-        // 增强手机号格式化逻辑，确保为 E.164 格式 (+国家代码+号码)
-        let digits = String(order.phone).replace(/\D/g, ''); 
-        
-        // 如果是 04... 格式，转为 614...
-        if (digits.startsWith('0')) digits = '61' + digits.slice(1);
-        // 如果不是以 61 开头，补上 61 (针对直接输入 4xx... 的情况)
-        if (!digits.startsWith('61')) digits = '61' + digits;
-
-        const formattedPhone = '+' + digits;
-
+        const formattedPhone = formatAUPhone(order.phone);
         console.log(`[SMS] Original phone: ${order.phone}, Formatted phone: ${formattedPhone}`);
         
         try {
