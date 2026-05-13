@@ -207,7 +207,7 @@ export default function OrderManagementPage() {
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t.password}</label>
-              <input type="password" required value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 font-bold focus:border-blue-500 outline-none transition-all" />
+              <input type="password" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 font-bold focus:border-blue-500 outline-none transition-all" />
             </div>
             {loginMsg && <p className="text-rose-500 text-xs font-bold text-center">{loginMsg}</p>}
             <button disabled={loginLoading} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-600 transition-all flex items-center justify-center gap-3">
