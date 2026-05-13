@@ -16,7 +16,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 // 时间计算工具
-const addMinutesToTime = (time: string, mins: number) => {
+const addMinutesToTime = (time: string | null, mins: number) => {
   try {
     let h: number, m: number;
     const normalizedTime = (time || '').toUpperCase();
