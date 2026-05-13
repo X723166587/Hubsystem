@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
 import { 
-  Clock, Phone, Loader2, Utensils, ChevronRight,
-  ChefHat, Calendar, PlusCircle, LayoutDashboard, Users, ListFilter, Edit2, Search
+  Clock, Phone, Loader2, Utensils, ChevronRight, Lock, LogIn,
+  ChefHat, Calendar, PlusCircle, LayoutDashboard, Users, ListFilter, Edit2, Search, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -20,8 +20,11 @@ const addMinutesToTime = (time: string, mins: number) => {
   try {
     let h: number, m: number;
     const normalizedTime = (time || '').toUpperCase();
-    if (!time || normalizedTime === 'ASAP') {
+    
+    // 如果传入 0 或者当前是 ASAP/空，则取当前真实时间
+    if (mins === 0 || !time || normalizedTime === 'ASAP') {
       const now = new Date();
+      // 使用悉尼时间或本地时间
       h = now.getHours();
       m = now.getMinutes();
     } else {
@@ -44,7 +47,9 @@ const TRANSLATIONS = {
     traffic: '今日客流量', membersCount: '会员总量', addMember: '录入新会员',
     name: '姓名', phone: '电话号码', save: '保存至云端', list: '全量会员名录',
     search: '快速查询...', date: '选择日期', cancel: '取消', notes: '备注',
-    received: '待确认', confirmed: '制作中', ready: '可取餐', finished: '已完成'
+    received: '待确认', confirmed: '制作中', ready: '可取餐', finished: '已完成',
+    loginTitle: '系统身份验证', loginSub: '请输入管理凭证以访问 Hub',
+    username: '用户名', password: '密码', loginBtn: '登录系统', loginError: '账号或密码错误'
   },
   en: {
     recent: 'Orders', stats: 'Dashboard', members: 'Members', latest: 'Latest Orders',
@@ -53,7 +58,9 @@ const TRANSLATIONS = {
     traffic: 'Traffic Today', membersCount: 'Total Members', addMember: 'Add Member',
     name: 'Name', phone: 'Phone', save: 'Save to Cloud', list: 'Member List',
     search: 'Search...', date: 'Date', cancel: 'Cancel', notes: 'Notes',
-    received: 'Pending', confirmed: 'Cooking', ready: 'Ready', finished: 'Finished'
+    received: 'Pending', confirmed: 'Cooking', ready: 'Ready', finished: 'Finished',
+    loginTitle: 'Authentication', loginSub: 'Please enter credentials to access Hub',
+    username: 'Username', password: 'Password', loginBtn: 'Login', loginError: 'Invalid credentials'
   }
 };
 
@@ -70,6 +77,11 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export default function OrderManagementPage() {
   const [activeTab, setActiveTab] = useState<'recent' | 'stats' | 'members'>('recent');
   const [limit, setLimit] = useState(10);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginMsg, setLoginMsg] = useState('');
+
   const [lang, setLang] = useState<'zh' | 'en'>('zh');
   const [newMember, setNewMember] = useState({ phone: '', name: '' });
   const [editingTimeId, setEditingTimeId] = useState<number | null>(null);
@@ -113,6 +125,31 @@ export default function OrderManagementPage() {
     };
   }, [orders, members, globalStats]);
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginMsg('');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm),
+      });
+      if (res.ok) {
+        // 设置 4 小时过期时间 (4 * 60 * 60 * 1000 毫秒)
+        const expiry = new Date().getTime() + 4 * 60 * 60 * 1000;
+        localStorage.setItem('orderbot_auth', JSON.stringify({ expiry }));
+        setIsLoggedIn(true);
+      } else {
+        setLoginMsg(t.loginError);
+      }
+    } catch (e) {
+      setLoginMsg('Server error');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     // 会员录入 API 路径更新
@@ -151,6 +188,37 @@ export default function OrderManagementPage() {
       setEditingTimeId(null);
     }
   };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200 p-12">
+          <div className="flex flex-col items-center mb-10">
+            <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-100 mb-6">
+              <Lock className="text-white" size={32} />
+            </div>
+            <h1 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">{t.loginTitle}</h1>
+            <p className="text-slate-400 font-bold text-center leading-tight">{t.loginSub}</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t.username}</label>
+              <input type="text" required value={loginForm.username} onChange={e => setLoginForm({...loginForm, username: e.target.value})} className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 font-bold focus:border-blue-500 outline-none transition-all" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t.password}</label>
+              <input type="password" required value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 font-bold focus:border-blue-500 outline-none transition-all" />
+            </div>
+            {loginMsg && <p className="text-rose-500 text-xs font-bold text-center">{loginMsg}</p>}
+            <button disabled={loginLoading} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-600 transition-all flex items-center justify-center gap-3">
+              {loginLoading ? <Loader2 className="animate-spin" size={20} /> : <LogIn size={20} />}
+              {t.loginBtn}
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100">
@@ -275,15 +343,21 @@ export default function OrderManagementPage() {
                         <td className="px-8 py-10 text-center relative">
                           {isReceived ? (
                             editingTimeId === order.id ? (
-                              <div className="flex flex-col gap-3 bg-white p-6 rounded-[2.5rem] border-2 border-blue-100 shadow-2xl absolute z-[60] left-1/2 -translate-x-1/2 -mt-28 min-w-[340px]">
+                              <div className="flex flex-col gap-3 bg-white p-6 rounded-[2.5rem] border-2 border-blue-100 shadow-2xl absolute z-[60] left-1/2 -translate-x-1/2 -mt-32 min-w-[340px]">
                                 <div className="grid grid-cols-3 gap-3">
-                                  {[5, 15, 20, 30, 45, 60].map(m => (
+                                  {[5, 15, 20, 30, 60].map(m => (
                                   <button 
                                     key={m}
                                     onClick={(e) => { e.stopPropagation(); handleUpdateOrder(order, { pickupTime: addMinutesToTime(order.pickupTime, m) }); }}
                                     className="py-5 bg-blue-50 text-blue-600 rounded-2xl text-lg font-black hover:bg-blue-600 hover:text-white transition-all active:scale-95"
                                   >+{m === 60 ? '1h' : `${m}m`}</button>
                                 ))}
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleUpdateOrder(order, { pickupTime: addMinutesToTime(null, 0) }); }}
+                                    className="py-5 bg-rose-50 text-rose-600 rounded-2xl text-lg font-black hover:bg-rose-600 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
+                                  >
+                                    <RotateCcw size={16} /> Reset
+                                  </button>
                               </div>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setEditingTimeId(null); }}

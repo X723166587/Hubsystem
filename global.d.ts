@@ -7,4 +7,5 @@ declare module '*.css' {
 
 interface CloudflareEnv {
   DB: D1Database;
+  AUTH_DB: D1Database;
 }
