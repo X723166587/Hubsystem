@@ -15,5 +15,5 @@ database_name = "camden_rsl_db"
 
 [[d1_databases]]
 binding = "AUTH_DB"
-database_id = "这里填入你新创建的Auth数据库ID"
-database_name = "hubsystem_auth_db"
+database_id = "07c5b556-ca2c-4b13-bbb4-2ed57d50e22a"
+database_name = "camden_rsl_db"
