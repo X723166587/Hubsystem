@@ -94,25 +94,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // 1. 会员登录/注册逻辑 (改进)
-    if (body.type === 'login' || (body.phone && body.name && !body.id)) {
-      const { phone, name } = body;
-      if (!phone) return NextResponse.json({ error: 'Phone is required' }, { status: 400 });
-      
-      const formattedPhone = formatAUPhone(phone);
-      const finalName = name?.trim() || 'Customer';
-
-      await queryD1(
-        `INSERT INTO members (phone, name) VALUES (?, ?) 
-         ON CONFLICT(phone) DO UPDATE SET name = excluded.name`,
-        [formattedPhone, finalName]
-      );
-
-      // 返回最新会员信息，方便前端存储状态
-      const member = await queryD1('SELECT phone, name FROM members WHERE phone = ?', [formattedPhone]);
-      return NextResponse.json({ success: true, member: member[0] });
-    }
-
     const { id, status, pickupTime } = body;
 
     if (!id) {
